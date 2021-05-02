@@ -1,0 +1,35 @@
+# Build stage
+FROM golang:1.16.3 AS build-env
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
+WORKDIR /app/certm
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+COPY . .
+
+RUN go build -o certm
+RUN chmod +x certm
+
+# Develop stage
+FROM centos:8 AS develop
+RUN yum install -y epel-release && yum -y update && yum install -y haproxy
+RUN curl -O https://dl.eff.org/certbot-auto && mv certbot-auto /usr/local/bin/certbot-auto && chmod 0755 /usr/local/bin/certbot-auto
+WORKDIR /usr/local/bin
+COPY --from=build-env /app/certm/certm .
+RUN chmod +x certm
+ENV WORKDIR "/usr/local/bin"
+ENV PATH "${WORKDIR}:${PATH}"
+
+RUN mkdir -p /etc/haproxy/ssl && \
+    mkdir -p /etc/letsencrypt/live/example.com && \
+    mkdir -p /etc/letsencrypt/live/rishat.space && \
+    touch /etc/letsencrypt/live/example.com/fullchain.pem && \
+    touch /etc/letsencrypt/live/example.com/privkey.pem && \
+    touch /etc/letsencrypt/live/rishat.space/fullchain.pem && \
+    touch /etc/letsencrypt/live/rishat.space/privkey.pem && \
+    touch /etc/haproxy/ssl/rishat.space.pem
+
+CMD ["certm", "--version"]

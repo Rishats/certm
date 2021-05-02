@@ -1,0 +1,5 @@
+.env
+.idea
+.certm
+.DS_Store
+vendor
