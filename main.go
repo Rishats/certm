@@ -9,7 +9,7 @@ import (
 )
 
 var domainName, email, haproxyCertsLocation, letsEncryptCertsLocation, certBotPort, s3EndPoint, s3BucketName, s3AccessKey, s3PrivateKey string
-var obtaining, renew, combine, transfer, puller, s3SSLEnabled bool
+var obtaining, renew, combine, transfer, puller, s3SSLEnabled, ruNow bool
 
 func main() {
 	app := &cli.App{
@@ -106,6 +106,11 @@ func main() {
 						Name:        "s3-ssl-disable",
 						Usage:       "--s3-ssl-disable - Disabled SSL for S3 endpoint useful for puller and transfer modes",
 						Destination: &s3SSLEnabled,
+					},
+					&cli.BoolFlag{
+						Name:        "now",
+						Usage:       "--now Run all specified modes NOW, skip scheduling jobs at night",
+						Destination: &ruNow,
 					},
 				},
 				Action: func(c *cli.Context) error {

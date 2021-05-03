@@ -18,7 +18,7 @@ func start() {
 	provisioning()
 }
 
-func checkEnabledMode()  {
+func checkEnabledMode() {
 	fmt.Println("[CERTM] MODE OBTAINING ENABLED:", obtaining)
 	fmt.Println("[CERTM] MODE RENEW ENABLED:", renew)
 	fmt.Println("[CERTM] MODE COMBINE ENABLED:", combine)
@@ -27,7 +27,7 @@ func checkEnabledMode()  {
 	fmt.Println("----------------------------")
 }
 
-func provisioning()  {
+func provisioning() {
 	fmt.Println("[CERTM] PROVISIONING")
 	if obtaining {
 		fmt.Println("[CERTM] PROVISIONING OBTAINING MODE")
@@ -35,22 +35,38 @@ func provisioning()  {
 	}
 	if renew {
 		fmt.Println("[CERTM] PROVISIONING RENEW MODE")
-		gocron.Every(1).Day().At("2:00").Do(runRenewMode)
+		if ruNow {
+			runRenewMode()
+		} else {
+			gocron.Every(1).Day().At("2:00").Do(runRenewMode)
+		}
 		fmt.Println("[CERTM] RENEW MODE ENABLED")
 	}
 	if combine {
 		fmt.Println("[CERTM] PROVISIONING COMBINE MODE")
-		gocron.Every(1).Day().At("2:10").Do(runCombineMode)
+		if ruNow {
+			runCombineMode()
+		} else {
+			gocron.Every(1).Day().At("2:10").Do(runCombineMode)
+		}
 		fmt.Println("[CERTM] COMBINE MODE ENABLED")
 	}
 	if transfer {
 		fmt.Println("[CERTM] PROVISIONING TRANSFER MODE")
-		gocron.Every(1).Day().At("2:20").Do(runTransferMode)
+		if ruNow {
+			runTransferMode()
+		} else {
+			gocron.Every(1).Day().At("2:20").Do(runTransferMode)
+		}
 		fmt.Println("[CERTM] TRANSFER MODE ENABLED")
 	}
 	if puller {
 		fmt.Println("[CERTM] PROVISIONING PULLER MODE")
-		gocron.Every(1).Day().At("2:30").Do(runPullerMode)
+		if ruNow {
+			runPullerMode()
+		} else {
+			gocron.Every(1).Day().At("2:30").Do(runPullerMode)
+		}
 		fmt.Println("[CERTM] PULLER MODE ENABLED")
 	}
 
@@ -64,15 +80,15 @@ func provisioning()  {
 	fmt.Println("[CERTM] STARTED")
 }
 
-func generateObtainingModeOptions() string{
+func generateObtainingModeOptions() string {
 	var options string
 
-	options += "--standalone --preferred-challenges http --http-01-address 127.0.0.1 --http-01-port 9080 -d " + domainName  + " --email " + email + " --agree-tos --non-interactive"
+	options += "--standalone --preferred-challenges http --http-01-address 127.0.0.1 --http-01-port " + certBotPort + " -d " + domainName + " --email " + email + " --agree-tos --non-interactive"
 
 	return options
 }
 
-func runObtainingMode()  {
+func runObtainingMode() {
 	fmt.Println("[CERTM] OBTAINING [STARTED]")
 	options := generateObtainingModeOptions()
 	cmd := exec.Command("/bin/sh",
@@ -104,7 +120,7 @@ func runObtainingMode()  {
 	}
 }
 
-func generateRenewModeOptions() string{
+func generateRenewModeOptions() string {
 	var options string
 
 	options += "--standalone --preferred-challenges http --http-01-address 127.0.0.1 --http-01-port " + certBotPort + " --quiet"
@@ -112,7 +128,7 @@ func generateRenewModeOptions() string{
 	return options
 }
 
-func runRenewMode()  {
+func runRenewMode() {
 	fmt.Println("[CERTM][RENEW] [STARTED]")
 	options := generateRenewModeOptions()
 	cmd := exec.Command("/bin/sh",
@@ -144,7 +160,7 @@ func runRenewMode()  {
 	}
 }
 
-func runCombineMode()  {
+func runCombineMode() {
 	fmt.Println("[CERTM] COMBINE [STARTED]")
 	var AppFs = afero.NewOsFs()
 
@@ -194,7 +210,7 @@ func runCombineMode()  {
 					_, err = buf.Write(pemFile)
 					var haproxyPemFileLocation string = haproxyCertsLocation + "/" + item.Name() + ".pem"
 
-					afs.WriteFile(haproxyPemFileLocation,pemFile,644)
+					afs.WriteFile(haproxyPemFileLocation, pemFile, 644)
 					fmt.Println("[CERTM][COMBINE] HAProxy PEM created: " + haproxyPemFileLocation)
 				} else {
 					fmt.Println("[CERTM][COMBINE] fullchain.pem or privkey not created for domain: " + item.Name())
@@ -209,7 +225,7 @@ func runCombineMode()  {
 	fmt.Println("[CERTM] COMBINE [SUCCESS]")
 }
 
-func runTransferMode()  {
+func runTransferMode() {
 	fmt.Println("[CERTM][TRANSFER] [STARTED]" + s3EndPoint)
 
 	ctx := context.Background()
@@ -261,33 +277,33 @@ func runTransferMode()  {
 			if !item.IsDir() {
 				fmt.Println("[CERTM][TRANSFER] FIND FILE: " + item.Name())
 
-					fmt.Println("[CERTM][COMBINE] SUCCESS FIND FILES: fullchain.pem,privkey.pem")
-					fmt.Println("[CERTM][COMBINE] COMBINING")
-					// handle file there
-					itemPath := haproxyCertsLocation + "/" + item.Name()
+				fmt.Println("[CERTM][COMBINE] SUCCESS FIND FILES: fullchain.pem,privkey.pem")
+				fmt.Println("[CERTM][COMBINE] COMBINING")
+				// handle file there
+				itemPath := haproxyCertsLocation + "/" + item.Name()
 
-					fmt.Println("[CERTM][TRANSFER] HAProxy PEM found: " + itemPath)
+				fmt.Println("[CERTM][TRANSFER] HAProxy PEM found: " + itemPath)
 
-					// Upload the zip file
-					objectName := item.Name()
-					filePath := itemPath
-					//contentType := "application/zip"
+				// Upload the zip file
+				objectName := item.Name()
+				filePath := itemPath
+				//contentType := "application/zip"
 
-					// Upload the zip file with FPutObject
-					info, err := minioClient.FPutObject(ctx, bucketName, objectName, filePath, minio.PutObjectOptions{})
-					if err != nil {
-						log.Fatalln(err)
-					}
-
-					log.Printf("[CERTM][TRANSFER] Successfully uploaded %s of size %d\n", objectName, info.Size)
-				} else {
-					fmt.Println("[CERTM][WARNING][TRANSFER] Look's like NO FILE IN HAPROXY SSL Dir! Try to hold only pem there!: " + item.Name())
+				// Upload the zip file with FPutObject
+				info, err := minioClient.FPutObject(ctx, bucketName, objectName, filePath, minio.PutObjectOptions{})
+				if err != nil {
+					log.Fatalln(err)
 				}
+
+				log.Printf("[CERTM][TRANSFER] Successfully uploaded %s of size %d\n", objectName, info.Size)
+			} else {
+				fmt.Println("[CERTM][WARNING][TRANSFER] Look's like NO FILE IN HAPROXY SSL Dir! Try to hold only pem there!: " + item.Name())
 			}
+		}
 	}
 }
 
-func runPullerMode()  {
+func runPullerMode() {
 	fmt.Println("[CERTM][PULLER] PULLER [STARTED]")
 
 	var AppFs = afero.NewOsFs()
@@ -324,8 +340,7 @@ func runPullerMode()  {
 			}
 			fmt.Println("[CERTM][PULLER] FOUND FILE: " + object.Key)
 
-
-			err = s3Client.FGetObject(context.Background(), s3BucketName, object.Key, haproxyCertsLocation + "/" + object.Key, minio.GetObjectOptions{})
+			err = s3Client.FGetObject(context.Background(), s3BucketName, object.Key, haproxyCertsLocation+"/"+object.Key, minio.GetObjectOptions{})
 			if err != nil {
 				fmt.Println(err)
 				return
