@@ -276,9 +276,7 @@ func runTransferMode() {
 			fmt.Println("[CERTM][TRANSFER][DOMAINS] " + item.Name())
 			if !item.IsDir() {
 				fmt.Println("[CERTM][TRANSFER] FIND FILE: " + item.Name())
-
-				fmt.Println("[CERTM][COMBINE] SUCCESS FIND FILES: fullchain.pem,privkey.pem")
-				fmt.Println("[CERTM][COMBINE] COMBINING")
+				
 				// handle file there
 				itemPath := haproxyCertsLocation + "/" + item.Name()
 
