@@ -26,10 +26,15 @@ ENV PATH "${WORKDIR}:${PATH}"
 RUN mkdir -p /etc/haproxy/ssl && \
     mkdir -p /etc/letsencrypt/live/example.com && \
     mkdir -p /etc/letsencrypt/live/rishat.space && \
-    touch /etc/letsencrypt/live/example.com/fullchain.pem && \
-    touch /etc/letsencrypt/live/example.com/privkey.pem && \
-    touch /etc/letsencrypt/live/rishat.space/fullchain.pem && \
-    touch /etc/letsencrypt/live/rishat.space/privkey.pem && \
-    touch /etc/haproxy/ssl/rishat.space.pem
+    mkdir -p /etc/letsencrypt/archive/example.com && \
+    mkdir -p /etc/letsencrypt/archive/rishat.space
+
+RUN openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -keyout /etc/letsencrypt/archive/example.com/fullchain.pem -out /etc/letsencrypt/archive/example.com/privkey.pem -subj "/C=PE/ST=Lima/L=Lima/O=Acme Inc. /OU=IT Department/CN=acme.com"
+RUN openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -keyout /etc/letsencrypt/archive/rishat.space/fullchain.pem -out /etc/letsencrypt/archive/rishat.space/privkey.pem -subj "/C=PE/ST=Lima/L=Lima/O=Acme Inc. /OU=IT Department/CN=acme.com"
+
+RUN ln -s /etc/letsencrypt/archive/example.com/fullchain.pem /etc/letsencrypt/live/example.com/fullchain.pem && \
+    ln -s /etc/letsencrypt/archive/example.com/privkey.pem /etc/letsencrypt/live/example.com/privkey.pem && \
+    ln -s /etc/letsencrypt/archive/example.com/fullchain.pem /etc/letsencrypt/live/rishat.space/fullchain.pem && \
+    ln -s /etc/letsencrypt/archive/example.com/privkey.pem /etc/letsencrypt/live/rishat.space/privkey.pem
 
 CMD ["certm", "--version"]

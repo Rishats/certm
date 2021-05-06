@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/jasonlvhit/gocron"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -97,66 +98,73 @@ func runObtainingMode() {
 
 	_, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("[CERTM][ERROR][OBTAINING] CAN'T RUN certbot program [1]")
+		red := color.New(color.FgRed)
+		boldRed := red.Add(color.Bold)
+		boldRed.Println("[CERTM][ERROR][OBTAINING] CAN'T RUN certbot program [1]")
 		//log.Fatal(err)
 	}
 
 	var waitStatus syscall.WaitStatus
 	if err := cmd.Run(); err != nil {
 		if err != nil {
-			fmt.Println("[CERTM][ERROR][OBTAINING] CAN'T RUN certbot program [2]")
+			red := color.New(color.FgRed)
+			boldRed := red.Add(color.Bold)
+			boldRed.Println("[CERTM][ERROR][OBTAINING] CAN'T RUN certbot program [2]")
 			//log.Fatal(err)
 		}
 		if exitError, ok := err.(*exec.ExitError); ok {
 			waitStatus = exitError.Sys().(syscall.WaitStatus)
-			fmt.Println("[CERTM][ERROR][OBTAINING] CAN'T RUN certbot program [3]")
+			red := color.New(color.FgRed)
+			boldRed := red.Add(color.Bold)
+			boldRed.Println("[CERTM][ERROR][OBTAINING] CAN'T RUN certbot program [3]")
 			fmt.Printf("[CERTM][ERROR][OBTAINING] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
 		}
 	} else {
 		// Success
 		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
 		fmt.Printf("[CERTM][ERROR][OBTAINING] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
-		fmt.Println("[CERTM][OBTAINING] [SUCCESS]")
+		green := color.New(color.FgGreen)
+		boldGreen := green.Add(color.Bold)
+		boldGreen.Println("[CERTM][OBTAINING] [SUCCESS]")
 	}
-}
-
-func generateRenewModeOptions() string {
-	var options string
-
-	options += "--standalone --preferred-challenges http --http-01-address 127.0.0.1 --http-01-port " + certBotPort + " --quiet"
-
-	return options
 }
 
 func runRenewMode() {
 	fmt.Println("[CERTM][RENEW] [STARTED]")
-	options := generateRenewModeOptions()
 	cmd := exec.Command("/bin/sh",
 		"-c",
-		"certbot renew "+options)
+		"certbot renew")
 
 	_, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("[CERTM][ERROR][RENEW] CAN'T RUN certbot program [1]")
+		red := color.New(color.FgRed)
+		boldRed := red.Add(color.Bold)
+		boldRed.Println("[CERTM][ERROR][RENEW] CAN'T RUN certbot program [1]")
 		//log.Fatal(err)
 	}
 
 	var waitStatus syscall.WaitStatus
 	if err := cmd.Run(); err != nil {
 		if err != nil {
-			fmt.Println("[CERTM][ERROR][RENEW] CAN'T RUN certbot program [2]")
+			red := color.New(color.FgRed)
+			boldRed := red.Add(color.Bold)
+			boldRed.Println("[CERTM][ERROR][RENEW] CAN'T RUN certbot program [2]")
 			//log.Fatal(err)
 		}
 		if exitError, ok := err.(*exec.ExitError); ok {
 			waitStatus = exitError.Sys().(syscall.WaitStatus)
-			fmt.Println("[CERTM][ERROR][RENEW] CAN'T RUN certbot program [3]")
+			red := color.New(color.FgRed)
+			boldRed := red.Add(color.Bold)
+			boldRed.Println("[CERTM][ERROR][RENEW] CAN'T RUN certbot program [3]")
 			fmt.Printf("[CERTM][ERROR][RENEW] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
 		}
 	} else {
 		// Success
 		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
 		fmt.Printf("[CERTM][ERROR][RENEW] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
-		fmt.Println("[CERTM][RENEW] [SUCCESS]")
+		green := color.New(color.FgGreen)
+		boldGreen := green.Add(color.Bold)
+		boldGreen.Println("[CERTM][RENEW] [SUCCESS]")
 	}
 }
 
@@ -168,13 +176,17 @@ func runCombineMode() {
 
 	haproxyCertsDirCreated, err := afs.DirExists(haproxyCertsLocation)
 	if err != nil || !haproxyCertsDirCreated {
-		fmt.Println("[CERTM][COMBINE] Make sure you have HAProxy dirs for CERT!: " + haproxyCertsLocation)
+		red := color.New(color.FgRed)
+		boldRed := red.Add(color.Bold)
+		boldRed.Println("[CERTM][COMBINE] Make sure you have HAProxy dirs for CERT!: " + haproxyCertsLocation)
 		log.Fatal(err)
 	}
 
 	letsEncryptCertsDirCreated, err := afs.DirExists(letsEncryptCertsLocation)
 	if err != nil || !letsEncryptCertsDirCreated {
-		fmt.Println("[CERTM][COMBINE] Make sure you have Let's Encrypt directory: " + letsEncryptCertsLocation)
+		red := color.New(color.FgRed)
+		boldRed := red.Add(color.Bold)
+		boldRed.Println("[CERTM][COMBINE] Make sure you have Let's Encrypt directory: " + letsEncryptCertsLocation)
 		log.Fatal(err)
 	}
 
@@ -206,14 +218,16 @@ func runCombineMode() {
 					buf.Write(fullChainPemFile)
 					buf.Write(privKeyPemFile)
 
-					var pemFile []byte
-					_, err = buf.Write(pemFile)
 					var haproxyPemFileLocation string = haproxyCertsLocation + "/" + item.Name() + ".pem"
 
-					afs.WriteFile(haproxyPemFileLocation, pemFile, 644)
-					fmt.Println("[CERTM][COMBINE] HAProxy PEM created: " + haproxyPemFileLocation)
+					afs.WriteFile(haproxyPemFileLocation, buf.Bytes(), 644)
+					blue := color.New(color.FgBlue)
+					boldBlue := blue.Add(color.Bold)
+					boldBlue.Println("[CERTM][COMBINE] HAProxy PEM created: " + haproxyPemFileLocation)
 				} else {
-					fmt.Println("[CERTM][COMBINE] fullchain.pem or privkey not created for domain: " + item.Name())
+					yellow := color.New(color.FgYellow)
+					boldYellow := yellow.Add(color.Bold)
+					boldYellow.Println("[CERTM][COMBINE] fullchain.pem or privkey not created for domain: " + item.Name())
 				}
 
 			} else {
@@ -222,7 +236,10 @@ func runCombineMode() {
 			}
 		}
 	}
-	fmt.Println("[CERTM] COMBINE [SUCCESS]")
+	runRestartHAProxyMode()
+	green := color.New(color.FgGreen)
+	boldGreen := green.Add(color.Bold)
+	boldGreen.Println("[CERTM] COMBINE [SUCCESS]")
 }
 
 func runTransferMode() {
@@ -249,7 +266,6 @@ func runTransferMode() {
 
 	err = minioClient.MakeBucket(ctx, s3BucketName, minio.MakeBucketOptions{Region: location})
 	if err != nil {
-		// Check to see if we already own this bucket (which happens if you run this twice)
 		exists, errBucketExists := minioClient.BucketExists(ctx, bucketName)
 		if errBucketExists == nil && exists {
 			log.Printf("[CERTM][TRANSFER] We already own bucket: %s\n", bucketName)
@@ -257,7 +273,9 @@ func runTransferMode() {
 			log.Fatalln(err)
 		}
 	} else {
-		log.Printf("[CERTM][TRANSFER] Successfully created [SUCCESS]%s\n", bucketName)
+		blue := color.New(color.FgBlue)
+		boldBlue := blue.Add(color.Bold)
+		boldBlue.Printf("[CERTM][TRANSFER] Successfully created [SUCCESS]%s\n", bucketName)
 	}
 
 	var AppFs = afero.NewOsFs()
@@ -266,7 +284,9 @@ func runTransferMode() {
 
 	haproxyCertsDirCreated, err := afs.DirExists(haproxyCertsLocation)
 	if err != nil || !haproxyCertsDirCreated {
-		fmt.Println("[CERTM][TRANSFER] Make sure you have HAProxy dirs for CERT!: " + haproxyCertsLocation)
+		red := color.New(color.FgRed)
+		boldRed := red.Add(color.Bold)
+		boldRed.Println("[CERTM][TRANSFER] Make sure you have HAProxy dirs for CERT!: " + haproxyCertsLocation)
 		log.Fatal(err)
 	}
 
@@ -276,26 +296,26 @@ func runTransferMode() {
 			fmt.Println("[CERTM][TRANSFER][DOMAINS] " + item.Name())
 			if !item.IsDir() {
 				fmt.Println("[CERTM][TRANSFER] FIND FILE: " + item.Name())
-				
-				// handle file there
+
 				itemPath := haproxyCertsLocation + "/" + item.Name()
 
 				fmt.Println("[CERTM][TRANSFER] HAProxy PEM found: " + itemPath)
 
-				// Upload the zip file
 				objectName := item.Name()
 				filePath := itemPath
-				//contentType := "application/zip"
 
-				// Upload the zip file with FPutObject
 				info, err := minioClient.FPutObject(ctx, bucketName, objectName, filePath, minio.PutObjectOptions{})
 				if err != nil {
 					log.Fatalln(err)
 				}
 
-				log.Printf("[CERTM][TRANSFER] Successfully uploaded %s of size %d\n", objectName, info.Size)
+				blue := color.New(color.FgBlue)
+				boldBlue := blue.Add(color.Bold)
+				boldBlue.Printf("[CERTM][TRANSFER] Successfully uploaded %s of size %d\n", objectName, info.Size)
 			} else {
-				fmt.Println("[CERTM][WARNING][TRANSFER] Look's like NO FILE IN HAPROXY SSL Dir! Try to hold only pem there!: " + item.Name())
+				yellow := color.New(color.FgYellow)
+				boldYellow := yellow.Add(color.Bold)
+				boldYellow.Println("[CERTM][WARNING][TRANSFER] Look's like NO FILE IN HAPROXY SSL Dir! Try to hold only pem there!: " + item.Name())
 			}
 		}
 	}
@@ -310,7 +330,9 @@ func runPullerMode() {
 
 	haproxyCertsDirCreated, err := afs.DirExists(haproxyCertsLocation)
 	if err != nil || !haproxyCertsDirCreated {
-		fmt.Println("[CERTM][TRANSFER] Make sure you have HAProxy dirs for CERT!: " + haproxyCertsLocation)
+		red := color.New(color.FgRed)
+		boldRed := red.Add(color.Bold)
+		boldRed.Println("[CERTM][TRANSFER] Make sure you have HAProxy dirs for CERT!: " + haproxyCertsLocation)
 		log.Fatal(err)
 	}
 
@@ -343,8 +365,52 @@ func runPullerMode() {
 				fmt.Println(err)
 				return
 			}
-			fmt.Println("[CERTM][PULLER] DOWNLOAD FILE: " + haproxyCertsLocation + "/" + object.Key)
+			blue := color.New(color.FgBlue)
+			boldBlue := blue.Add(color.Bold)
+			boldBlue.Println("[CERTM][PULLER] DOWNLOAD FILE: " + haproxyCertsLocation + "/" + object.Key)
 		}
 	}
-	fmt.Println("[CERTM][PULLER] [SUCCESS]")
+	runRestartHAProxyMode()
+	green := color.New(color.FgGreen)
+	boldGreen := green.Add(color.Bold)
+	boldGreen.Println("[CERTM][PULLER] [SUCCESS]")
+}
+
+func runRestartHAProxyMode() {
+	fmt.Println("[CERTM][HAPROXY-HELPER] [STARTED]")
+	cmd := exec.Command("/bin/sh",
+		"-c",
+		"systemctl restart haproxy")
+
+	_, err := cmd.StdoutPipe()
+	if err != nil {
+		yellow := color.New(color.FgYellow)
+		boldYellow := yellow.Add(color.Bold)
+		boldYellow.Println("[CERTM][ERROR][HAPROXY-HELPER] CAN'T RUN systemctl restart haproxy program [1]")
+		//log.Fatal(err)
+	}
+
+	var waitStatus syscall.WaitStatus
+	if err := cmd.Run(); err != nil {
+		if err != nil {
+			yellow := color.New(color.FgYellow)
+			boldYellow := yellow.Add(color.Bold)
+			boldYellow.Println("[CERTM][ERROR][HAPROXY-HELPER] CAN'T RUN systemctl restart haproxy program [2]")
+			//log.Fatal(err)
+		}
+		if exitError, ok := err.(*exec.ExitError); ok {
+			waitStatus = exitError.Sys().(syscall.WaitStatus)
+			yellow := color.New(color.FgYellow)
+			boldYellow := yellow.Add(color.Bold)
+			boldYellow.Println("[CERTM][ERROR][HAPROXY-HELPER] CAN'T RUN systemctl restart haproxy program [3]")
+			boldYellow.Printf("[CERTM][ERROR][HAPROXY-HELPER] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
+		}
+	} else {
+		// Success
+		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
+		green := color.New(color.FgGreen)
+		boldGreen := green.Add(color.Bold)
+		boldGreen.Printf("[CERTM][ERROR][HAPROXY-HELPER] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
+		boldGreen.Println("[CERTM][HAPROXY-HELPER] [SUCCESS]")
+	}
 }
