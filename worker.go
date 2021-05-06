@@ -410,7 +410,7 @@ func runRestartHAProxyMode() {
 		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
 		green := color.New(color.FgGreen)
 		boldGreen := green.Add(color.Bold)
-		boldGreen.Printf("[CERTM][ERROR][HAPROXY-HELPER] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
+		boldGreen.Printf("[CERTM][HAPROXY-HELPER] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
 		boldGreen.Println("[CERTM][HAPROXY-HELPER] [SUCCESS]")
 	}
 }
