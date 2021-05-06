@@ -161,7 +161,7 @@ func runRenewMode() {
 	} else {
 		// Success
 		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
-		fmt.Printf("[CERTM][ERROR][RENEW] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
+		fmt.Printf("[CERTM][RENEW] Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
 		green := color.New(color.FgGreen)
 		boldGreen := green.Add(color.Bold)
 		boldGreen.Println("[CERTM][RENEW] [SUCCESS]")

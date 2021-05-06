@@ -69,38 +69,3 @@ jobs:
         with:
           name: certm_linux
           path: .
-
-  build_for_windows:
-    name: Build for Windows
-    runs-on: windows-latest
-    #needs: [lint, test]
-    steps:
-      - name: Set up Go
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.14.6
-
-      - name: Check out code
-        uses: actions/checkout@v1
-
-      - name: Download modules
-        run: go mod download
-
-      - name: Choco help
-        uses: crazy-max/ghaction-chocolatey@v1
-        with:
-          args: -h
-
-      - name: Choco install Cygwin
-        uses: crazy-max/ghaction-chocolatey@v1
-        with:
-          args: install cygwin
-
-      - name: Build
-        run: go build -o certm.exe
-
-      - name: Upload dir and bin as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: certm_windows
-          path: .

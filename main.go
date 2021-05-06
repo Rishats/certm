@@ -14,7 +14,7 @@ var obtaining, renew, combine, transfer, puller, s3SSLEnabled, ruNow bool
 func main() {
 	app := &cli.App{
 		Name:    "certm",
-		Version: "v1.0.0",
+		Version: "v1.0.3",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "domain_name",
